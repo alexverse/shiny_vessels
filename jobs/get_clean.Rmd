@@ -124,7 +124,6 @@ There is some noise in the data and vessels look very similar for each duplicate
 
 ```{r}
 vessels_dt <- vessels_dt[, head(.SD, 1), by = "SHIP_ID"]
-#test that ids are unique
 testthat::expect_false(any(vessels_dt[, table(SHIP_ID) > 1]))
 ```
 
@@ -132,6 +131,8 @@ testthat::expect_false(any(vessels_dt[, table(SHIP_ID) > 1]))
 
 ```{r}
 vessels_dt <- vessels_dt[SHIPNAME != "[SAT-AIS]"]
+vessels_dt %>%
+  head
 ```
 
 ```{r}
@@ -168,6 +169,37 @@ ships_long_dist <- ships_dt[
         , -c("date", "week_nb")]
 ```
 
+- Merging with vessels data keeping all vessel ids even if a max distance is not
+retrieved.
+
+```{r, out.width = "100%"}
+vessels_dt <- merge(vessels_dt, ships_long_dist, on = "SHIP_ID", all.x = TRUE)
+DT::datatable(
+  vessels_dt,
+  extensions = 'Buttons',
+  options = list(
+    scrollX = TRUE,
+    dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+  )
+)
+```
+
+
 ## Save data
 
 Saving vessels data
+
+```{r}
+fwrite(vessels_dt, "vessels.csv")
+```
+
+- Dimensions: **`r dim(vessels_dt)`**
+- File size: **`r file.info("vessels.csv")$size %>% utils:::format.object_size("auto")`**
+
+### Download data 
+
+#### Data generated from this report: 
+
+- **[vessels.csv](vessels.csv)**
+
