@@ -194,6 +194,16 @@ Saving vessels data
 fwrite(vessels_dt, "vessels.csv")
 ```
 
+Unix time of computation
+
+```{r}
+Sys.time() %>%
+  as.numeric %>%
+  as.character %>%
+  writeLines("timestamp.txt")
+```
+
+
 - Dimensions: **`r dim(vessels_dt)`**
 - File size: **`r file.info("vessels.csv")$size %>% utils:::format.object_size("auto")`**
 
@@ -202,4 +212,4 @@ fwrite(vessels_dt, "vessels.csv")
 #### Data generated from this report: 
 
 - **[vessels.csv](vessels.csv)**
-
+- **[timestamp.txt](timestamp.txt)**
