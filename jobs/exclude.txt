@@ -1,4 +1,3 @@
 dataset
 exclude.txt
 get_clean.Rmd
-render.sh
