@@ -1,0 +1,235 @@
+---
+title: "Config Notebook"
+output: html_notebook
+---
+
+```{r}
+library(benchmarkme)
+library(magrittr)
+library(data.table, warn.conflicts = FALSE)
+```
+
+## Setting the environment
+
+Initially we setup the environment that we will work. In a contabo VPS we install docker and docker-compose. We setup an Rstudio server and a Shiny server that will help on fast prototyping and sharing while Nginx is used for reverse proxy, properly 
+configured for web-socket compatibility (see docker-compose definition and nginx config file). An ssl certificate is configured using certbot while using remotes shiny.semantic **4.0.0** is installed for the particular version.
+
+- The computing node is a Virtual Personalized Server and the OS is Ubuntu 20.04 LTS.
+
+```{r}
+get_sys_details()[c("cpu", "ram")]
+version$os
+```
+
+- Inspecting R environment
+
+```{r}
+get_r_version() %>% tail(2)
+``` 
+
+## Development environment
+
+We use a multistage build Docker file to build rstudio server with all the required
+libraries and on top of this we build shiny server so that they share common libraries. 
+Note that, to push in a production environment shiny server docker image 
+should be defined using only the libraries actually used (e.g. use **renv**).
+
+- Docker *multistage* build that I use for trying thinks...
+
+```
+FROM rocker/verse:latest as mstudio
+MAINTAINER "Alexandros Kouretsis" akourets@gmail.com
+RUN install2.r --error \
+    htmlwidgets \
+    stringr \
+    yaml \
+    profvis \
+    thematic \
+    ggforce \
+    gh \
+    globals \
+    openintro \
+    gapminder \
+    RSQLite \
+    shiny \
+    rmarkdown \
+    pagedown \
+    blogdown \
+    bookdown \
+    kableExtra \
+    glmnet \
+    e1071 \
+    lightgbm \
+    xgboost \
+    text2vec \
+    caret \
+    shinyWidgets \
+    shinycssloaders \
+    shinyFeedback \ 
+    shinythemes \
+    flexdashboard \
+    shinydashboard \
+    plotly \
+    echarts4r \
+    waiter
+    
+RUN Rscript -e \
+  "remotes::install_version('shiny.semantic', version = '0.4.0', repos = 'http://cran.us.r-project.org')"
+
+RUN install2.r --error benchmarkme
+
+CMD ["/init"]
+
+FROM mstudio as mshiny
+RUN apt-get update && apt-get install -y \
+    sudo \
+    gdebi-core \
+    pandoc \
+    pandoc-citeproc \
+    libcurl4-gnutls-dev \
+    libcairo2-dev \
+    libxt-dev \
+    wget && wget --no-verbose https://download3.rstudio.org/ubuntu-14.04/x86_64/VERSION -O "version.txt" && \
+    VERSION=$(cat version.txt)  && \
+    wget --no-verbose "https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-$VERSION-amd64.deb" -O ss-latest.deb && \
+    gdebi -n ss-latest.deb && \
+    rm -f version.txt ss-latest.deb && \
+    . /etc/environment && \
+    apt-get clean && rm -rf /var/lib/apt/lists/
+COPY ./shiny-server.conf  /etc/shiny-server/shiny-server.conf
+EXPOSE 3838
+COPY shiny-server.sh /usr/bin/shiny-server.sh
+RUN ["chmod", "+x", "/usr/bin/shiny-server.sh"]
+CMD ["/usr/bin/shiny-server.sh"]
+```
+
+- *docker-compose* configuration:
+
+```
+services:
+  certbot:
+    entrypoint: /bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h &
+      wait $${!}; done;'
+    image: certbot/certbot
+    volumes:
+    - /home/Projects/manifolR/data/certbot/conf:/etc/letsencrypt:rw
+    - /home/Projects/manifolR/data/certbot/www:/var/www/certbot:rw
+  mshiny:
+    build:
+      context: /home/Projects/manifolR
+      target: mshiny
+    command:
+    - /usr/bin/shiny-server.sh
+    ports:
+    - published: 3939
+      target: 3838
+    restart: always
+    volumes:
+    - /home/Projects/manifolR/data/shiny:/srv/shiny-server:rw
+  nginx:
+    command: /bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done
+      & nginx -g "daemon off;"'
+    image: nginx
+    ports:
+    - published: 80
+      target: 80
+    - published: 443
+      target: 443
+    restart: always
+    volumes:
+    - /home/Projects/manifolR/data/nginx/html:/usr/share/nginx/html:rw
+    - /home/Projects/manifolR/data/nginx:/etc/nginx/conf.d:rw
+    - /home/Projects/manifolR/data/certbot/conf:/etc/letsencrypt:rw
+    - /home/Projects/manifolR/data/certbot/www:/var/www/certbot:rw
+  rstudio:
+    build:
+      context: /home/Projects/manifolR
+      target: mstudio
+    command:
+    - /init
+    depends_on:
+      mshiny:
+        condition: service_started
+      nginx:
+        condition: service_started
+    environment:
+      PASSWORD: XXX
+      ROOT: "TRUE"
+      USER: XXX
+    ports:
+    - published: 8989
+      target: 8787
+    restart: always
+    volumes:
+    - vol_mstudio:/home:rw
+    - /home/Projects/manifolR/data/shiny:/srv/shiny-server:rw
+version: '3.9'
+volumes:
+  vol_mstudio: {}
+```
+
+- *Nginx* configuration
+
+```
+server {
+
+        listen 80;
+        server_name aledat.eu;
+        
+        location / {
+                return 301 https://$host$request_uri;
+        }
+        
+        location /.well-known/acme-challenge/ {
+                root /var/www/certbot;
+        }
+
+}
+
+map $http_upgrade $connection_upgrade {
+
+        default upgrade;
+        ''      close;
+
+}
+
+server {
+
+        listen 443 ssl;
+        server_name aledat.eu;
+        root /usr/share/nginx/html;
+        
+        location /shiny/ {
+          rewrite ^/shiny/(.*)$ /$1 break;
+          proxy_pass http://mshiny:3838/;
+          proxy_redirect http://mshiny:3838/ $scheme://$http_host/shiny/;
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection $connection_upgrade;
+          proxy_read_timeout 20d;
+          proxy_buffering off;
+        }
+
+        location /rstudio/ {
+                rewrite ^/rstudio/(.*)$ /$1 break;
+                proxy_pass http://rstudio:8787;
+                proxy_redirect http://rstudio:8787/ $scheme://$http_host/rstudio/;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection $connection_upgrade;
+                proxy_read_timeout 20d;
+        }
+        
+        ssl_certificate /etc/letsencrypt/live/aledat.eu/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/aledat.eu/privkey.pem;
+        include /etc/letsencrypt/options-ssl-nginx.conf;
+        ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+        
+}
+
+```
+
+
+
+
+
