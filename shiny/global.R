@@ -1,3 +1,5 @@
+#libraries
+################################################################################
 library(data.table)
 library(magrittr)
 library(shiny)
@@ -5,12 +7,18 @@ library(shiny.semantic)
 library(plotly)
 library(leaflet)
 
-domain <- "https://aledat.eu/shiny/vessels/"
-render_cols <- c("SHIPNAME", "LENGTH", "WIDTH", "FLAG", "ship_type", "DESTINATION", "port")
+#source
+################################################################################
+allScripts <- list.files(path = "src", recursive = TRUE, full.names = TRUE)
+lapply(allScripts, source)
 
-vessels_dt <- function() fread(paste0(domain, "results/vessels.csv"), stringsAsFactors = TRUE)
+#functions
+################################################################################
+vessels_dt <- function() 
+  fread(paste0(domain, "results/vessels.csv"), stringsAsFactors = TRUE)
 
-valid_time <- function() readLines(paste0(domain, "results/timestamp.txt"))
+valid_time <- function() 
+  readLines(paste0(domain, "results/timestamp.txt"))
 
 `%inT%` <- function(x, table) {
   if (!is.null(table) && ! "" %in% table)
@@ -19,8 +27,9 @@ valid_time <- function() readLines(paste0(domain, "results/timestamp.txt"))
     rep_len(TRUE, length(x))
 }
 
-filter_data <- function(args, data) {
-  res <- lapply(names(args), function(x) data[[x]] %inT% args[[x]])
+filter_data <- function(args, vars_dt, data) {
+  res <- lapply(seq(nrow(vars_dt)), function(i) 
+    data[[vars_dt[i, ID]]] %inT% args[[vars_dt[i, NID]]])
   data[Reduce(f = `&`, x = res)]
 }
 
@@ -31,10 +40,26 @@ trans_vector <- function(dat){
   unlist
 }
 
+#definitions
+################################################################################
+domain <- "https://aledat.eu/shiny/vessels/"
+
+render_cols <- 
+  c("SHIPNAME", "LENGTH", "WIDTH", "FLAG", "ship_type", "DESTINATION", "port")
+
+vars_dt <- data.table(
+  ID = c("SHIPTYPE", "SHIP_ID"),
+  NAME = c("ship_type", "SHIPNAME"),
+  NID = c("vessel_type", "vessel_name"),
+  LABEL = c("Vessel Type:", "Vessel Name:")
+)
+
+#initial
+################################################################################
 init_dat <- vessels_dt()
+init_choices <- list()
 
-init_type_choices <- init_dat[, .(ship_type, SHIPTYPE)] %>% 
+init_choices[["vessel_type"]] <- init_dat[, .(ship_type, SHIPTYPE)] %>% 
   trans_vector
-
-init_vessels <- init_dat[, .(SHIPNAME, SHIP_ID)] %>% 
+init_choices[["vessel_name"]] <- init_dat[, .(SHIPNAME, SHIP_ID)] %>% 
   trans_vector
