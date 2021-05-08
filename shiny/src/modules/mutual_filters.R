@@ -19,20 +19,13 @@ filterInput <- function(id, vars_dt) {
   )
 }
 
-filterServer <- function(id, vars_dt) {
+filterServer <- function(id, vars_dt, vessels_poll) {
   
-  stopifnot(is.data.table(vars_dt))
   stopifnot(!is.reactive(vars_dt))
-    
+  stopifnot(is.reactive(vessels_poll))
+  
   moduleServer(id, function(input, output, session) {
    
-    vessels_poll <- reactivePoll(
-      1000, 
-      session, 
-      valid_time, 
-      vessels_dt
-    )
-    
     react_data <- reactive({
       filter_data(input, vars_dt, vessels_poll())
     })
@@ -72,4 +65,5 @@ filterServer <- function(id, vars_dt) {
     )
     
   })
+  
 }
