@@ -146,7 +146,8 @@ observations._
 
 - Sort with respect to `SHIP_ID` and `DATETIME`. 
 - Take the lag vectors for `LAT` and `LON`.
-- Calculate Karney distance between LON, LAT and their respective lag vectors.
+- Calculate Karney distance between LON, LAT and their respective lag vectors 
+(accuracy ~ 1mm).
 - Get max value(s) for each `SHIP_ID`.
 - Get latest max value to cover the edge case of a vessel moving exactly the same 
 amount of meters.
@@ -162,6 +163,9 @@ and for large distances.
 ```{r}
 ships_dt[, DIST := geodist(cbind(LON, LAT), cbind(fromLON, fromLAT), paired = TRUE, measure = "geodesic")]
 
+ships_dt[, DIST := round(DIST, 3)] #karney distance has accuracy less than 1mm!
+
+
 ships_long_dist <- ships_dt[
   !is.na(DIST)][
     order(SHIP_ID, DATETIME, DIST)][
@@ -174,6 +178,17 @@ retrieved.
 
 ```{r, out.width = "100%"}
 vessels_dt <- merge(vessels_dt, ships_long_dist, on = "SHIP_ID", all.x = TRUE)
+```
+
+- Calculating &Deltat between two consecutive observations,
+
+```{r}
+vessels_dt[, delta_tau := DATETIME - fromTIME]
+```
+
+- Exposing results
+
+```{r}
 DT::datatable(
   vessels_dt,
   extensions = 'Buttons',
@@ -185,16 +200,17 @@ DT::datatable(
 )
 ```
 
-
 ## Save data
 
-Saving vessels data
+- Saving vessels data
 
 ```{r}
 fwrite(vessels_dt, "vessels.csv")
 ```
+- Dimensions: **`r dim(vessels_dt)`**
+- File size: **`r file.info("vessels.csv")$size %>% utils:::format.object_size("auto")`**
 
-Unix time of computation
+- Saving current unix time for [reactive polling](https://shiny.rstudio.com/reference/shiny/latest/reactivePoll.html)
 
 ```{r}
 Sys.time() %>%
@@ -204,12 +220,8 @@ Sys.time() %>%
 ```
 
 
-- Dimensions: **`r dim(vessels_dt)`**
-- File size: **`r file.info("vessels.csv")$size %>% utils:::format.object_size("auto")`**
-
-### Download data 
-
-#### Data generated from this report: 
+## Linked data 
 
 - **[vessels.csv](vessels.csv)**
+
 - **[timestamp.txt](timestamp.txt)**
