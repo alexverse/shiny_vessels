@@ -7,9 +7,14 @@ server <- function(input, output, session) {
     get_vessels_dt
   )
   
-  c(filter_data, vessel_name) %<-% filterServer("v_data", vars_dt, vessels_poll)
+  c(filter_data, vessel_type, vessel_name) %<-% filterServer("v_data", vars_dt, vessels_poll)
   
-  output$data <- renderTable(head(filter_data()[, ..render_cols]))
+  output$data <- renderTable({
+    dat <- filter_data()
+    if(!is.null(vessel_name()))
+      dat <- nearest_vessels(dat, vessels_poll(), top = 6)
+    dat[order(-SPEED), head(.SD, n_obs), .SDcols = render_cols]
+  })
   
   output$map <- renderLeaflet({
     req(nrow(filter_data()) > 0)

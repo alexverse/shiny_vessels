@@ -63,7 +63,7 @@ distance_tooltip <- function(flag_id, ship_name, ship_type, port, destination, d
     <li>Port: <b>{port}</b></li>
     <li>Destination: <b>{destination}</b></li>
     <li>Distance: <b>{distance}m</b></li>
-    <li>&#8796 t: <b>{delta_tau}sec</b></li>
+    <li>Time difference: <b>{delta_tau}sec</b></li>
     </ul>
   ') %>% as.character
 }
