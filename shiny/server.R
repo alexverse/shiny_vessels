@@ -13,7 +13,7 @@ server <- function(input, output, session) {
     dat <- filter_data()
     if(!is.null(vessel_name()))
       dat <- nearest_vessels(dat, vessels_poll(), top = 6)
-    dat[order(-SPEED), head(.SD, n_obs), .SDcols = render_cols]
+    dat[order(-SPEED), head(.SD, n_rows), .SDcols = render_cols]
   })
   
   output$map <- renderLeaflet({

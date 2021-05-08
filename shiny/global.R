@@ -7,7 +7,7 @@ library(plotly)
 library(leaflet)
 library(zeallot)
 
-domain <- "https://aledat.eu/shiny/vessels/"
+domain <- readLines("conf/domain.conf")
 
 #src
 allScripts <- list.files(path = "src", pattern = "\\.R$", recursive = TRUE, full.names = TRUE)
@@ -20,10 +20,10 @@ get_vessels_dt <- function()
 valid_time <- function() 
   readLines(paste0(domain, "results/timestamp.txt"))
 
-#num of observations and cols to render in table
+#rows and cols to render in table
 render_cols <- 
   c("SHIPNAME", "ship_type", "DESTINATION", "port", "SPEED","LENGTH", "WIDTH", "DWT")
-n_obs <- 6 
+n_rows <- 6 
 
 #initial choices
 init_dat <- get_vessels_dt()

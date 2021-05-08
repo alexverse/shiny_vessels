@@ -90,9 +90,4 @@ trans_vector <- function(dict, ord = TRUE){
 #' }
 #'
 
-vars_dt <- data.table(
-  ID = c("SHIPTYPE", "SHIP_ID"),
-  NAME = c("ship_type", "SHIPNAME"),
-  NID = c("vessel_type", "vessel_name"),
-  LABEL = c("Vessel Type:", "Vessel Name:")
-)
+vars_dt <- fread("src/filters_conf.csv")
