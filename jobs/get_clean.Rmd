@@ -82,11 +82,22 @@ str(ships_dt)
 We observe that the dataset is relatively "healthy". There are some missing values,
 while the column names are descriptive. There are ~3 Million observations. 
 
+
 ## Tidy data
+
+We remove rows with `NA` value for `LON` and `LAT`
+
+```{r}
+nrow_init <- ships_dt %>% nrow
+ships_dt <- ships_dt[!is.na(LAT)][!is.na(LON)]
+```
+
+- `NA` Rows removed: **`r nrow_init - ships_dt %>% nrow`**
 
 We can bring the data in a more "tidy" format by extracting a vessels table. In that
 sense each row is an observation and each column in a variable while each type of 
-observational unit is a table. 
+observational unit is a table (a ports table is also possible to be extracted but we left 
+for future work). 
 
 In the vessels table we will store invariant columns with respect to geolocation 
 and time. 
@@ -134,11 +145,6 @@ vessels_dt <- vessels_dt[SHIPNAME != "[SAT-AIS]"]
 vessels_dt %>%
   head
 ```
-
-```{r}
-DT::datatable(vessels_dt)
-```
-
 ## Longest distance calculation
 
 _We will pre-compute for each vessel the longest distance traveled between two consecutive 
@@ -180,13 +186,40 @@ retrieved.
 vessels_dt <- merge(vessels_dt, ships_long_dist, on = "SHIP_ID", all.x = TRUE)
 ```
 
-- Calculating &Deltat between two consecutive observations,
+- Calculating time difference between two consecutive observations,
 
 ```{r}
 vessels_dt[, delta_tau := DATETIME - fromTIME]
 ```
 
-- Exposing results
+## Last Location
+
+If no vessel is selected in the app then display all vessels with respect to 
+their latest location.
+
+```{r}
+last_signal <- 
+  ships_dt[order(-DATETIME, SHIP_ID), head(.SD, 1), by = "SHIP_ID", .SDcols = c("LAT", "LON")]
+setnames(last_signal, c("LON", "LAT"), c("lastLON", "lastLAT"))
+
+vessels_dt <- merge(vessels_dt, last_signal, all.x = TRUE)
+```
+
+## Tidying vessels data
+
+For some vessels we get only one observation. This will cause a *discrepancy*
+for displaying consecutive distances. 
+
+Although they are treated by the shiny server function, we remove them proactively.
+
+```{r}
+vessels_dt <- vessels_dt[!is.na(LAT) | is.na(LON)]
+```
+
+## Exposing results
+
+Exposed data are easier to inspect and helps in the development process and debugging of the app
+later on.
 
 ```{r}
 DT::datatable(
@@ -218,7 +251,6 @@ Sys.time() %>%
   as.character %>%
   writeLines("timestamp.txt")
 ```
-
 
 ## Linked data 
 
