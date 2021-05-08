@@ -66,7 +66,10 @@ filterServer <- function(id, vars_dt) {
       }, ignoreInit = TRUE, ignoreNULL = FALSE)
     })
     
-    reactive(react_data())
+    list(
+      filter_data = reactive(react_data()),
+      vessel_name = reactive(input$vessel_name)
+    )
     
   })
 }

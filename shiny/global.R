@@ -6,6 +6,7 @@ library(shiny)
 library(shiny.semantic)
 library(plotly)
 library(leaflet)
+library(zeallot)
 
 #source
 ################################################################################
