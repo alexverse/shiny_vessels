@@ -54,12 +54,16 @@ vars_dt <- data.table(
   LABEL = c("Vessel Type:", "Vessel Name:")
 )
 
-#initial
-################################################################################
+#initial choices
+###############################################################################
 init_dat <- vessels_dt()
 init_choices <- list()
 
-init_choices[["vessel_type"]] <- init_dat[, .(ship_type, SHIPTYPE)] %>% 
+init_choices[["vessel_type"]] <- init_dat[, .(ship_type, SHIPTYPE)] %>%
   trans_vector
-init_choices[["vessel_name"]] <- init_dat[, .(SHIPNAME, SHIP_ID)] %>% 
+init_choices[["vessel_name"]] <- init_dat[, .(SHIPNAME, SHIP_ID)] %>%
   trans_vector
+
+#pre-compute
+###############################################################################
+ocean_icons <- leaflet_icons("www/images/vessels/icons/")

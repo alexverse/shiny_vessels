@@ -26,7 +26,7 @@ filterServer <- function(id, vars_dt) {
     
   moduleServer(id, function(input, output, session) {
    
-    vessels <- reactivePoll(
+    vessels_poll <- reactivePoll(
       1000, 
       session, 
       valid_time, 
@@ -34,12 +34,12 @@ filterServer <- function(id, vars_dt) {
     )
     
     react_data <- reactive({
-      filter_data(input, vars_dt, vessels())
+      filter_data(input, vars_dt, vessels_poll())
     })
     
     observeEvent(input$reset_all, {
       lapply(seq(nrow(vars_dt)), function(i)
-        vessels()[, c(vars_dt[i, NAME], vars_dt[i, ID]), with = FALSE] %>%
+        vessels_poll()[, c(vars_dt[i, NAME], vars_dt[i, ID]), with = FALSE] %>%
           trans_vector %>%
           updateSelectInput(
             session, 
