@@ -15,7 +15,7 @@ lapply(allScripts, source)
 
 #functions
 ################################################################################
-vessels_dt <- function() 
+get_vessels_dt <- function() 
   fread(paste0(domain, "results/vessels.csv"), stringsAsFactors = TRUE)
 
 valid_time <- function() 
@@ -57,7 +57,7 @@ vars_dt <- data.table(
 
 #initial choices
 ###############################################################################
-init_dat <- vessels_dt()
+init_dat <- get_vessels_dt()
 init_choices <- list()
 
 init_choices[["vessel_type"]] <- init_dat[, .(ship_type, SHIPTYPE)] %>%
