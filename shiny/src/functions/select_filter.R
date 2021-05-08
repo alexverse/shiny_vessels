@@ -11,6 +11,7 @@
 #'
 #' @examples
 #' 1:3 %inT% NULL
+
 `%inT%` <- function(x, table) {
   if (!is.null(table) && ! "" %in% table)
     x %in% table
@@ -32,7 +33,13 @@
 #' @import %inT%
 #'
 #' @examples
-#' args <- list
+#' args <- list(
+#'   vessel_type = c(8, 7),
+#'   vessel_name = c(1960, 2006)
+#' )
+#' fread("https://aledat.eu/shiny/vessels/results/vessels.csv") %>%
+#'  filter_data(args, vars_dt, .)
+
 filter_data <- function(args, vars_dt, data) {
   
   res <- lapply(seq(nrow(vars_dt)), function(i) 
@@ -55,6 +62,7 @@ filter_data <- function(args, vars_dt, data) {
 #'   c("foo", "bar")
 #' )
 #' trans_vector(xx)
+
 trans_vector <- function(dict, ord = TRUE){
   
   res <- dict %>%
@@ -81,6 +89,7 @@ trans_vector <- function(dict, ord = TRUE){
 #' \item{LABEL}{Corresponding UI name in filters module namespace}
 #' }
 #'
+
 vars_dt <- data.table(
   ID = c("SHIPTYPE", "SHIP_ID"),
   NAME = c("ship_type", "SHIPNAME"),

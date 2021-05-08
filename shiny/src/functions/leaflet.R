@@ -53,7 +53,6 @@ leaflet_tooltip <- function(flag_id, ship_name, ship_type, port, destination){
   ') %>% as.character
 }
 
-
 distance_tooltip <- function(flag_id, ship_name, ship_type, port, destination, distance, delta_tau){
   flag_key <- tolower(flag_id)
   distance <- round(distance, 3) #karney distance has accuracy less than 1mm!
