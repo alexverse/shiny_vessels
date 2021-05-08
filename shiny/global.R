@@ -21,13 +21,6 @@ get_vessels_dt <- function()
 valid_time <- function() 
   readLines(paste0(domain, "results/timestamp.txt"))
 
-trans_vector <- function(dat){
-  dat %>%
-  unique %>%
-  transpose(make.names = TRUE) %>%
-  unlist
-}
-
 #definitions
 ################################################################################
 domain <- "https://aledat.eu/shiny/vessels/"
