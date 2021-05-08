@@ -59,11 +59,14 @@ filterServer <- function(id, vars_dt, vessels_poll) {
       }, ignoreInit = TRUE, ignoreNULL = FALSE)
     })
     
-    list(
-      filter_data = reactive(react_data()),
-      vessel_name = reactive(input$vessel_name)
-    )
+    input_args <- lapply(vars_dt[, NID], function(x) reactive(input[[x]]))
+    names(input_args) <- vars_dt[, NID]
     
+    append(
+      list(filter_data = reactive(react_data())),
+      input_args  
+    )
+
   })
   
 }
