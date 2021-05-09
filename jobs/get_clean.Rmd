@@ -1,20 +1,26 @@
 ---
-title: "Preprocess Shiny Vessels data"
-author: "alex@appsilon"
-date: "5/5/2021"
-output: html_document
+title: "Preprocess geolocation data"
+subtitle: "Linked data report"
+date: "`r Sys.time()`"
+output:
+  html_document:
+    highlight: zenburn
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_folding: hide
 ---
-
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+init_time <- Sys.time()
+googledrive::drive_auth(path = ".buoyant-purpose-232220-c0625ed45e4f.json")
 ```
 
 ## Setting the Environment
 
 The task has the specification to develop the solution in shiny using shiny.semntic 4.0.0. 
-We will use, data.table for data I/O and data wrangling since it excells on speed and and memory footrint (see the automated benchmarks from [H2O](https://h2oai.github.io/db-benchmark/). Also, all data that will be
-used by the shiny server will be saved in **fst** format, one of the fastest R binary formats.
+We will use, data.table for data I/O and data wrangling since it excells on speed and and memory footrint (see the automated benchmarks from [H2O](https://h2oai.github.io/db-benchmark/).
 
 ```{r}
 library(data.table, warn.conflicts = FALSE)
@@ -33,7 +39,7 @@ Calculations are performed with assignment by reference using the `:=` operator
 of the data.table extension to data.frame. We will use this technique extensively 
 during most of the computations due to its optimized performance since it performs 
 minimal copies on memory. Also, data wrangling is performed within the data.table 
-environment to take adavantage of the optimised backend. We carefully use vectorised 
+environment to take advantage of the optimised backend. We carefully use vectorised 
 operations avoiding for loops. This, is an essential technique in high-level 
 programming languages since reduces function which are costly.
 
@@ -66,7 +72,6 @@ In the following screen shot is the definition of the service account. The devel
 ```{r}
 dir.create("dataset/", showWarnings = FALSE)
 options(gargle_oauth_email = TRUE)
-drive_auth(path = ".buoyant-purpose-232220-c0625ed45e4f.json", email = TRUE)
 drive_download("ships_04112020.zip", path = "dataset/ships.zip", overwrite = TRUE)
 ```
 
@@ -113,7 +118,6 @@ vessels_dt <- ships_dt[, c("SHIP_ID", vessel_vars), with = FALSE] %>%
 ```{r}
 ships_dt <- ships_dt[, -vessel_vars, with = FALSE]
 ```
-
 
 - SHIP_ID should be unique in vessels table. However, this is not the case.
 
@@ -175,8 +179,7 @@ ships_dt[, DIST := round(DIST, 3)] #karney distance has accuracy less than 1mm!
 ships_long_dist <- ships_dt[
   !is.na(DIST)][
     order(SHIP_ID, DATETIME, DIST)][
-      , tail(.SD, 1), by = "SHIP_ID"][
-        , -c("date", "week_nb")]
+      , tail(.SD, 1), by = "SHIP_ID"]
 ```
 
 - Merging with vessels data keeping all vessel ids even if a max distance is not
@@ -207,6 +210,10 @@ vessels_dt <- merge(vessels_dt, last_signal, all.x = TRUE)
 
 ## Tidying vessels data
 
+Cleaning step to prepare data for shiny.
+
+### Missing location
+
 For some vessels we get only one observation. This will cause a *discrepancy*
 for displaying consecutive distances. 
 
@@ -216,10 +223,24 @@ Although they are treated by the shiny server function, we remove them proactive
 vessels_dt <- vessels_dt[!is.na(LAT) | is.na(LON)]
 ```
 
-## Exposing results
+## Preparing timeseries data
 
-Exposed data are easier to inspect and helps in the development process and debugging of the app
-later on.
+Data for plotly visualization. 
+
+- Calculate mean distance between concurrent observations by `vessel type` and `date`. 
+
+```{r}
+ts_data <- merge(
+  ships_dt[!is.na(DIST), .(date, SHIP_ID, DIST)], 
+  vessels_dt[, .(SHIP_ID, SHIPTYPE, ship_type)],
+  by = "SHIP_ID"
+)
+ts_data <- ts_data[, .(date_dist = mean(DIST)), by = c("date", "SHIPTYPE", "ship_type")]
+```
+
+## Vessels Data
+
+Exposed data are easier to inspect and helps in the development process and debugging of the app later on.
 
 ```{r}
 DT::datatable(
@@ -233,9 +254,24 @@ DT::datatable(
 )
 ```
 
+## Timeseries Data
+
+```{r}
+DT::datatable(
+  ts_data,
+  extensions = 'Buttons',
+  options = list(
+    scrollX = TRUE,
+    dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+  )
+)
+```
+
+
 ## Save data
 
-- Saving vessels data
+### Vessels data
 
 ```{r}
 fwrite(vessels_dt, "vessels.csv")
@@ -244,7 +280,16 @@ fwrite(vessels_dt, "vessels.csv")
 - Dimensions: **`r dim(vessels_dt)`**
 - File size: **`r file.info("vessels.csv")$size %>% utils:::format.object_size("auto")`**
 
-- Saving current unix time for [reactive polling](https://shiny.rstudio.com/reference/shiny/latest/reactivePoll.html)
+### Timeseries data
+
+```{r}
+fwrite(ts_data, "ts_data.csv")
+```
+
+- Dimensions: **`r dim(ts_data)`**
+- File size: **`r file.info("ts_data.csv")$size %>% utils:::format.object_size("auto")`**
+
+### Saving current unix time for [reactive polling](https://shiny.rstudio.com/reference/shiny/latest/reactivePoll.html)
 
 ```{r}
 Sys.time() %>%
@@ -255,6 +300,19 @@ Sys.time() %>%
 
 ## Linked data 
 
-- **[vessels.csv](vessels.csv)**
+- **Vessels: [vessels.csv](vessels.csv)**
 
-- **[timestamp.txt](timestamp.txt)**
+- **Timeseries: [ts_data.csv](ts_data.csv)**
+
+- **Unix Time: [timestamp.txt](timestamp.txt)**
+
+
+## Total time
+
+Report's render time: **`r round(Sys.time() - init_time)` sec**
+
+## Session Info
+
+```{r}
+sessionInfo()
+```
