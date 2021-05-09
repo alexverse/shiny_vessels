@@ -16,7 +16,7 @@ get_toaster <- function(dat, vessel_id, session){
   
   get_note(dat, vessel_id) %>%
     toast(
-      duration = 10, 
+      duration = 5, 
       class = "teal raised", 
       session = session,
       toast_tags = list(

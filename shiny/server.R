@@ -6,7 +6,14 @@ server <- function(input, output, session) {
     valid_time, 
     get_vessels_dt
   )
-
+  
+  ts_poll <- reactivePoll(
+    1000, 
+    session, 
+    valid_time, 
+    get_ts_dt
+  ) 
+  
   c(filter_data, vessel_type, vessel_name) %<-% filterServer("v_data", vars_dt, vessels_poll)
   
   observeEvent(vessel_name(),{
@@ -20,8 +27,6 @@ server <- function(input, output, session) {
   })
   
   output$map <- renderLeaflet({
-    
-    on.exit(waiter_hide())
 
     req(nrow(filter_data()) > 0) 
     
@@ -45,6 +50,14 @@ server <- function(input, output, session) {
     
     dat
     
-  }, caption = "<h3> - Nearest vessels by max distance sailed - </h3>", caption.placement = "top")
+  }, caption = "<h3> Nearest vessels by max distance sailed </h3>", caption.placement = "top")
+  
+  output$plot <- renderPlotly({
+    
+    on.exit(waiter_hide())
+    plot_ts(ts_poll(), sv_colors)
+    
+  })
+    
   
 }

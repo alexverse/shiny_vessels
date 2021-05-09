@@ -20,15 +20,19 @@ lapply(allScripts, source) %>%
 get_vessels_dt <- function() 
   fread(paste0(domain, "results/vessels.csv"), stringsAsFactors = TRUE)
 
+get_ts_dt <- function() 
+  fread(paste0(domain, "results/ts_data.csv"), stringsAsFactors = TRUE)
+
+
 valid_time <- function() 
   readLines(paste0(domain, "results/timestamp.txt"))
 
 #rows and cols to render in table
 render_cols <- 
-  c("SHIPNAME", "ship_type", "DESTINATION", "port", "DIST", "DWT")
-render_cols_names <- 
-  c("Vessel", "Type", "Destination", "Port", "Max Dist (m)", "DWT (kgr)")
+  c("SHIPNAME", "ship_type", "DESTINATION", "port", "DIST")
 
+render_cols_names <- 
+  c("Vessel", "Type", "Destination", "Port", "Max Dist (m)")
 
 n_rows <- 6 
 
@@ -43,3 +47,17 @@ init_choices[["vessel_name"]] <- init_dat[, .(SHIPNAME, SHIP_ID)] %>%
 
 #leaflet icons for vessel type
 ocean_icons <- leaflet_icons("www/images/vessels/icons/")
+
+#pallet
+sv_colors <- c(
+  "#ba6161",
+  "#a19e5d",
+  "#7dbaa7",
+  "#4d7291",
+  "#c3d7e8",
+  "#028ee6",
+  "#424242",
+  "#e57368",
+  "#787878"
+)
+fonts <- "Lato"

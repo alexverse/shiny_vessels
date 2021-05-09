@@ -88,7 +88,7 @@ We observe that the dataset is relatively "healthy". There are some missing valu
 while the column names are descriptive. There are ~3 Million observations. 
 
 
-## Tidy data
+## Process data
 
 We remove rows with `NA` value for `LON` and `LAT`
 
@@ -150,7 +150,7 @@ vessels_dt %>%
   head
 ```
 
-## Longest distance calculation
+### Longest distance calculation
 
 - Pre-compute for each vessel the longest distance traveled between two consecutive 
 observations.
@@ -195,10 +195,12 @@ vessels_dt <- merge(vessels_dt, ships_long_dist, on = "SHIP_ID", all.x = TRUE)
 vessels_dt[, delta_tau := DATETIME - fromTIME]
 ```
 
-## Last Location
+### Last Location
 
 If no vessel is selected in the app then display all vessels with respect to 
 their latest location.
+
+- Calculating latest location and inserting in vessels table.
 
 ```{r}
 last_signal <- 
@@ -208,11 +210,7 @@ setnames(last_signal, c("LON", "LAT"), c("lastLON", "lastLAT"))
 vessels_dt <- merge(vessels_dt, last_signal, all.x = TRUE)
 ```
 
-## Tidying vessels data
-
-Cleaning step to prepare data for shiny.
-
-### Missing location
+### Vessels with one ais observation
 
 For some vessels we get only one observation. This will cause a *discrepancy*
 for displaying consecutive distances. 
@@ -223,7 +221,7 @@ Although they are treated by the shiny server function, we remove them proactive
 vessels_dt <- vessels_dt[!is.na(LAT) | is.na(LON)]
 ```
 
-## Preparing timeseries data
+### Timeseries data
 
 Data for plotly visualization. 
 
@@ -238,7 +236,9 @@ ts_data <- merge(
 ts_data <- ts_data[, .(date_dist = mean(DIST)), by = c("date", "SHIPTYPE", "ship_type")]
 ```
 
-## Vessels Data
+## Exposing results
+
+### Vessels Data
 
 Exposed data are easier to inspect and helps in the development process and debugging of the app later on.
 
@@ -254,7 +254,7 @@ DT::datatable(
 )
 ```
 
-## Timeseries Data
+### Timeseries Data
 
 ```{r}
 DT::datatable(
@@ -269,7 +269,7 @@ DT::datatable(
 ```
 
 
-## Save data
+## Persist results
 
 ### Vessels data
 
@@ -289,7 +289,7 @@ fwrite(ts_data, "ts_data.csv")
 - Dimensions: **`r dim(ts_data)`**
 - File size: **`r file.info("ts_data.csv")$size %>% utils:::format.object_size("auto")`**
 
-### Saving current unix time for [reactive polling](https://shiny.rstudio.com/reference/shiny/latest/reactivePoll.html)
+### Log for [reactive polling](https://shiny.rstudio.com/reference/shiny/latest/reactivePoll.html)
 
 ```{r}
 Sys.time() %>%
@@ -298,7 +298,9 @@ Sys.time() %>%
   writeLines("timestamp.txt")
 ```
 
-## Linked data 
+### Linked data 
+
+This data will be used directly from the up. Thus, if we update data is not always necessary to deploy in **shinyapps.io**. Also, useful for testing.
 
 - **Vessels: [vessels.csv](vessels.csv)**
 
@@ -306,12 +308,13 @@ Sys.time() %>%
 
 - **Unix Time: [timestamp.txt](timestamp.txt)**
 
+## Report's Info
 
-## Total time
+### Total time
 
 Report's render time: **`r round(Sys.time() - init_time)` sec**
 
-## Session Info
+### Session Info
 
 ```{r}
 sessionInfo()
