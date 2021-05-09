@@ -7,6 +7,7 @@ library(plotly)
 library(leaflet)
 library(zeallot)
 library(geodist)
+library(waiter)
 
 domain <- readLines("conf/domain.conf")
 

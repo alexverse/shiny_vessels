@@ -9,6 +9,8 @@ grid_top <- grid_template(
 
 ui <- semanticPage(
   title = "Shiny Vessels",
+  use_waiter(),
+  waiter_show_on_load(html = spin_wave(), color = "#2185d0"),
   titlePanel(
     div(
       img(src = "images/logo.png",  width = "20%", height = "auto"), #responsive
