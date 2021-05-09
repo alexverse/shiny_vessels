@@ -6,6 +6,7 @@ library(shiny.semantic)
 library(plotly)
 library(leaflet)
 library(zeallot)
+library(geodist)
 
 domain <- readLines("conf/domain.conf")
 

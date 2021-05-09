@@ -145,10 +145,11 @@ vessels_dt <- vessels_dt[SHIPNAME != "[SAT-AIS]"]
 vessels_dt %>%
   head
 ```
+
 ## Longest distance calculation
 
-_We will pre-compute for each vessel the longest distance traveled between two consecutive 
-observations._ 
+- Pre-compute for each vessel the longest distance traveled between two consecutive 
+observations.
 
 - Sort with respect to `SHIP_ID` and `DATETIME`. 
 - Take the lag vectors for `LAT` and `LON`.
@@ -170,7 +171,6 @@ and for large distances.
 ships_dt[, DIST := geodist(cbind(LON, LAT), cbind(fromLON, fromLAT), paired = TRUE, measure = "geodesic")]
 
 ships_dt[, DIST := round(DIST, 3)] #karney distance has accuracy less than 1mm!
-
 
 ships_long_dist <- ships_dt[
   !is.na(DIST)][
@@ -240,6 +240,7 @@ DT::datatable(
 ```{r}
 fwrite(vessels_dt, "vessels.csv")
 ```
+
 - Dimensions: **`r dim(vessels_dt)`**
 - File size: **`r file.info("vessels.csv")$size %>% utils:::format.object_size("auto")`**
 

@@ -90,4 +90,4 @@ trans_vector <- function(dict, ord = TRUE){
 #' }
 #'
 
-vars_dt <- fread("src/filters_conf.csv")
+vars_dt <- fread("conf/filters_conf.csv")

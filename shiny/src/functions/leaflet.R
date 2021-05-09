@@ -41,34 +41,6 @@ leaflet_icons <- function(path, www = "images/vessels/icons/", iconWidth = 70){
 
 }
 
-leaflet_tooltip <- function(flag_id, ship_name, ship_type, port, destination){
-  flag_key <- tolower(flag_id)
-  glue::glue('
-    <i  size="large" class="{flag_key} flag"></i> <b> - {ship_name}</b>
-    <ul>
-    <li>Shiptype: <b>{ship_type}</b></li>
-    <li>Port: <b>{port}</b></li>
-    <li>Destination: <b>{destination}</b></li>
-    </ul>
-  ') %>% as.character
-}
-
-distance_tooltip <- function(flag_id, ship_name, ship_type, port, destination, distance, delta_tau){
-  flag_key <- tolower(flag_id)
-  distance <- round(distance, 3) #karney distance has accuracy less than 1mm!
-  glue::glue('
-    <i  size="large" class="{flag_key} flag"></i> <b> - {ship_name}</b>
-    <ul>
-    <li>Shiptype: <b>{ship_type}</b></li>
-    <li>Port: <b>{port}</b></li>
-    <li>Destination: <b>{destination}</b></li>
-    <li>Distance: <b>{distance}m</b></li>
-    <li>Time difference: <b>{delta_tau}sec</b></li>
-    </ul>
-  ') %>% as.character
-}
-
-
 #' Interactive map 
 #'
 #' @param render_data data to be rendered 
@@ -76,6 +48,7 @@ distance_tooltip <- function(flag_id, ship_name, ship_type, port, destination, d
 #' @param ocean_icons `leaflet_icons` for vessel type 
 #'
 #' @return leaflet map
+#' @import latest_popup, distance_popup
 #'
 #' @examples
 #' vessels_map(vessels_data, FALSE, ocean_icons)
@@ -112,9 +85,9 @@ vessels_map <- function(render_data, all_vessels, ocean_icons){
     
     leaf %<>%
       addMarkers(
-        ~ LON,
-        ~ LAT,
-        popup = ~ leaflet_tooltip(FLAG, SHIPNAME, ship_type, port, DESTINATION), 
+        ~ lastLON,
+        ~ lastLAT,
+        popup = ~ latest_popup(FLAG, SHIPNAME, ship_type, port, DESTINATION, lastLON, lastLAT), 
         icon = ~ ocean_icons[ship_type],
         clusterOptions = markerClusterOptions() 
       )
@@ -130,7 +103,7 @@ vessels_map <- function(render_data, all_vessels, ocean_icons){
       addMarkers(
         ~ LON, 
         ~ LAT, 
-        popup = ~ distance_tooltip(FLAG, SHIPNAME, ship_type, port, DESTINATION, DIST, delta_tau), 
+        popup = ~ distance_popup(FLAG, SHIPNAME, ship_type, port, DESTINATION, DIST, delta_tau, LON, LAT), 
         icon = ~ ocean_icons[ship_type]
       )
     
@@ -152,4 +125,33 @@ vessels_map <- function(render_data, all_vessels, ocean_icons){
   
   leaf
   
+}
+
+latest_popup <- function(flag_id, ship_name, ship_type, port, destination, lon, lat){
+  flag_key <- tolower(flag_id)
+  glue::glue('
+    <i  size="large" class="{flag_key} flag"></i> <b> - {ship_name}</b>
+    <ul>
+    <li>Shiptype: <b>{ship_type}</b></li>
+    <li>Port: <b>{port}</b></li>
+    <li>Destination: <b>{destination}</b></li>
+    <li>Latest loc: <b>{lon}, {lat}</b></li>
+    </ul>
+  ') %>% as.character
+}
+
+distance_popup <- function(flag_id, ship_name, ship_type, port, destination, distance, delta_tau, lon, lat){
+  flag_key <- tolower(flag_id)
+  distance <- round(distance, 3) #karney distance has accuracy less than 1mm!
+  glue::glue('
+    <i  size="large" class="{flag_key} flag"></i> <b> - {ship_name}</b>
+    <ul>
+    <li>Shiptype: <b>{ship_type}</b></li>
+    <li>Port: <b>{port}</b></li>
+    <li>Destination: <b>{destination}</b></li>
+    <li>Distance: <b>{distance}m</b></li>
+    <li>Time: <b>{delta_tau}sec</b></li>
+    <li>Location: <b>{lon}, {lat}</b></li>
+    </ul>
+  ') %>% as.character
 }

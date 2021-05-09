@@ -6,8 +6,22 @@ server <- function(input, output, session) {
     valid_time, 
     get_vessels_dt
   )
-  
+
   c(filter_data, vessel_type, vessel_name) %<-% filterServer("v_data", vars_dt, vessels_poll)
+  
+  observeEvent(vessel_name(),{
+    req(vessel_name())
+    get_note(filter_data(), vessel_name()) %>%
+      toast(
+        duration = 10, 
+        class = "teal raised", 
+        session = session,
+        toast_tags = list(
+          position = "bottom right",
+          showIcon = "water"
+        )
+      )
+  })
   
   output$data <- renderTable({
     dat <- filter_data()

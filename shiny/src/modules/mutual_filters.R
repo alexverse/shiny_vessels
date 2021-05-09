@@ -1,5 +1,6 @@
 filterInput <- function(id, vars_dt) {
-  tagList(
+  segment(
+    class = "basic blue",
     lapply(seq(nrow(vars_dt)), function(i){
       selectInput(
         NS(id, vars_dt[i, NID]),
@@ -7,12 +8,12 @@ filterInput <- function(id, vars_dt) {
         init_choices[[vars_dt[i, NID]]], 
         selectize = TRUE, 
         multiple = TRUE, 
-        width = "300px",
         default_text = "ALL"
       )        
     }),
-    actionLink(
-      inputId = NS(id, "reset_all"),
+    action_button(
+      class = "basic blue tiny",
+      input_id = NS(id, "reset_all"),
       label = "Reset Filters",
       icon = icon("remove")
     )
