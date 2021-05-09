@@ -22,14 +22,7 @@ server <- function(input, output, session) {
         )
       )
   })
-  
-  output$data <- renderTable({
-    dat <- filter_data()
-    if(!is.null(vessel_name()))
-      dat <- nearest_vessels(dat, vessels_poll(), top = 6)
-    dat[order(-SPEED), head(.SD, n_rows), .SDcols = render_cols]
-  })
-  
+
   output$map <- renderLeaflet({
     req(nrow(filter_data()) > 0)
     vessels_map(
@@ -38,5 +31,16 @@ server <- function(input, output, session) {
       ocean_icons
     )
   })
+  
+  output$data <- renderTable({
+    dat <- filter_data()
+    if(!is.null(vessel_name())){
+      dat <- nearest_vessels(dat, vessels_poll(), top = 6)
+    }
+    dat <- dat[order(-DIST), head(.SD, n_rows), .SDcols = render_cols]
+    setnames(dat, render_cols_names)
+    dat
+  }, caption = "<h3> - Nearest vessels by max distance sailed - </h3>", caption.placement = "top")
+  
 
 }

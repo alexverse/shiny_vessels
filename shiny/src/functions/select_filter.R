@@ -38,7 +38,7 @@
 #'   vessel_name = c(1960, 2006)
 #' )
 #' fread("https://aledat.eu/shiny/vessels/results/vessels.csv") %>%
-#'  filter_data(args, vars_dt, .)
+#' filter_data(args, vars_dt, .)
 
 filter_data <- function(args, vars_dt, data) {
   

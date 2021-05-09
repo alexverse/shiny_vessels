@@ -64,22 +64,27 @@ vessels_map <- function(render_data, all_vessels, ocean_icons){
   
   leaf <- 
     render_data[complete.cases(render_data[, .(LON, LAT)])] %>%
-    leaflet %>%
-    addProviderTiles(tiles) %>%
-    addMiniMap(
-      tiles = tiles, 
-      toggleDisplay = TRUE,
-      position = "bottomright"
-    ) %>%
-    htmlwidgets::onRender("
-          function(el, x) {
-            var myMap = this;
-            myMap.on('baselayerchange',
-              function (e) {
-            myMap.minimap.changeLayer(L.tileLayer.provider(e.name));
-            })
-          }
-        ")
+      leaflet(
+        options = leafletOptions(zoomControl = FALSE)) %>%
+          htmlwidgets::onRender("function(el, x) {
+            L.control.zoom({ position: 'bottomleft' }).addTo(this)
+          }"
+      ) %>%
+      addProviderTiles(tiles) %>%
+      addMiniMap(
+        tiles = tiles, 
+        toggleDisplay = TRUE,
+        position = "bottomright"
+      ) %>%
+      htmlwidgets::onRender("
+        function(el, x) {
+          var myMap = this;
+          myMap.on('baselayerchange',
+            function (e) {
+          myMap.minimap.changeLayer(L.tileLayer.provider(e.name));
+          })
+        }
+      ")
   
   if(all_vessels){
     

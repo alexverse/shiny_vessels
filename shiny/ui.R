@@ -9,11 +9,12 @@ grid_top <- grid_template(
 
 ui <- semanticPage(
   title = "Shiny Vessels",
-  div(
-    class = "logo",
-    img(src = "images/logo.png", alt = "App logo",  width = "25%", height = "auto"), #responsive
+  titlePanel(
+    div(
+      img(src = "images/logo.png",  width = "20%", height = "auto"), #responsive
+    )
   ),
-  main_panel(
+  mainPanel( #main_panel from semantic produces a 3 in the end!
     grid(
       grid_top,
       filters = filterInput("v_data", vars_dt), 

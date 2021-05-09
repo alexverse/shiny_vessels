@@ -12,7 +12,8 @@ domain <- readLines("conf/domain.conf")
 
 #src
 allScripts <- list.files(path = "src", pattern = "\\.R$", recursive = TRUE, full.names = TRUE)
-lapply(allScripts, source)
+lapply(allScripts, source) %>% 
+  invisible
 
 #for polling
 get_vessels_dt <- function() 
@@ -23,7 +24,11 @@ valid_time <- function()
 
 #rows and cols to render in table
 render_cols <- 
-  c("SHIPNAME", "ship_type", "DESTINATION", "port", "SPEED","LENGTH", "WIDTH", "DWT")
+  c("SHIPNAME", "ship_type", "DESTINATION", "port", "DIST", "DWT")
+render_cols_names <- 
+  c("Vessel", "Type", "Destination", "Port", "Max Dist (m)", "DWT (kgr)")
+
+
 n_rows <- 6 
 
 #initial choices

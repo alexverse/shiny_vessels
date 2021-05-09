@@ -18,8 +18,6 @@ nearest_vessels <- function(x, y, top_){
   center_map <- x[, .(LON = mean(LON), LAT = mean(LAT))]
   rel_vessels <- y[SHIPTYPE %inT% x$SHIPTYPE]
   
-  rel_vessels %>% class
-  
   center_map <- center_map[complete.cases(center_map)]
   rel_vessels <- rel_vessels[complete.cases(rel_vessels[, .(LON, LAT)])]
   
