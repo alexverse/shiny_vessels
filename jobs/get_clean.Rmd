@@ -42,7 +42,7 @@ during most of the computations due to its optimized performance since it perfor
 minimal copies on memory. Also, data wrangling is performed within the data.table 
 environment to take advantage of the optimised backend. We carefully use vectorised 
 operations avoiding for loops. This, is an essential technique in high-level 
-programming languages since reduces function which are costly.
+programming languages since it reduces function calls which are costly.
 
 ## Download Data
 

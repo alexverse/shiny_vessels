@@ -1,6 +1,14 @@
 ---
-title: "Config Notebook"
-output: html_notebook
+title: "Setting dev the environment"
+subtitle: "Tech and methods"
+date: "`r Sys.time()`"
+output:
+  html_document:
+    highlight: zenburn
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_folding: hide
 ---
 
 ```{r}
@@ -11,8 +19,8 @@ library(data.table, warn.conflicts = FALSE)
 
 ## Setting the environment
 
-Initially we setup the environment that we will work. In a contabo VPS we install docker and docker-compose. We setup an Rstudio server and a Shiny server that will help on fast prototyping and sharing while Nginx is used for reverse proxy, properly 
-configured for web-socket compatibility (see docker-compose definition and nginx config file). An ssl certificate is configured using certbot while using remotes shiny.semantic **4.0.0** is installed for the particular version.
+Initially we setup the environment that we will work. In a contabo VPS we install docker and docker-compose. We setup an Rstudio server and a Shiny server that will help on fast prototyping and data sharing while Nginx is used for reverse proxy, properly 
+configured for web-socket compatibility (see docker-compose definition and nginx config file). An ssl certificate is configured using certbot. The remotes library is used so shiny.semantic **4.0.0** is installed for the particular version.
 
 - The computing node is a Virtual Personalized Server and the OS is Ubuntu 20.04 LTS.
 
@@ -27,14 +35,38 @@ version$os
 get_r_version() %>% tail(2)
 ``` 
 
-## Development environment
+## Development
+
+We used the following
+
+- Google service account
+- Contabo VPS
+- Shiny server open source
+- Rstudio server open source
+- Docker and the Rockerverse
+- shinyapps.io
+
+Shiny is structured with separate ui.R, server.R and global.R scripts. 
+
+- Executing `./test_deploy.sh 1` from the projects dir in Rstudio server performs 
+the following actions:
+
+1) Download data from google drive and render Rmarkdown report. 
+2) Sync results with shiny server to expose in the web.
+3) Run shiny automated tests with testthat.
+4) Sync shiny code with shiny server.
+
+Usually I run a watch command performing 3 and 4 during development to automatically
+update shiny server code.
+
+## Settings
 
 We use a multistage build Docker file to build rstudio server with all the required
 libraries and on top of this we build shiny server so that they share common libraries. 
 Note that, to push in a production environment shiny server docker image 
 should be defined using only the libraries actually used (e.g. use **renv**).
 
-- Docker *multistage* build that I use for trying thinks...
+- Docker *multistage* build 
 
 ```
 FROM rocker/verse:latest as mstudio
@@ -228,7 +260,6 @@ server {
 }
 
 ```
-
 
 
 
