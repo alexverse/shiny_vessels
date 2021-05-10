@@ -12,9 +12,7 @@ library(waiter)
 domain <- readLines("conf/domain.conf")
 
 #src
-allScripts <- list.files(path = "src", pattern = "\\.R$", recursive = TRUE, full.names = TRUE)
-lapply(allScripts, source) %>% 
-  invisible
+list.files(path = "R", recursive = TRUE, full.names = TRUE) %>% lapply(source)
 
 #for polling
 get_vessels_dt <- function() 
@@ -45,10 +43,9 @@ init_choices[["vessel_type"]] <- init_dat[, .(ship_type, SHIPTYPE)] %>%
 init_choices[["vessel_name"]] <- init_dat[, .(SHIPNAME, SHIP_ID)] %>%
   trans_vector
 
-#leaflet icons for vessel type
+#visuals
 ocean_icons <- leaflet_icons("www/images/vessels/icons/")
 
-#pallet
 sv_colors <- c(
   "#ba6161",
   "#a19e5d",
@@ -60,4 +57,5 @@ sv_colors <- c(
   "#e57368",
   "#787878"
 )
+
 fonts <- "Lato"
