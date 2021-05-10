@@ -1,9 +1,9 @@
 #libraries
 library(data.table)
-library(magrittr)
+library(magrittr, warn.conflicts = FALSE)
 library(shiny)
-library(shiny.semantic)
-library(plotly)
+library(shiny.semantic, warn.conflicts = FALSE)
+library(plotly, warn.conflicts = FALSE)
 library(leaflet)
 library(zeallot)
 library(geodist)
