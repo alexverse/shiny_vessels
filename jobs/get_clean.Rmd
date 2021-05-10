@@ -29,6 +29,7 @@ library(googledrive)
 library(ggplot2)
 library(fst)
 library(geodist)
+library(stringr)
 ```
 
 ## Exploratory data analysis
@@ -113,7 +114,7 @@ vessels_dt <- ships_dt[, c("SHIP_ID", vessel_vars), with = FALSE] %>%
   unique
 ```
 
-- Discarding vars from AIS table
+- Discarding vars from AIS table that we moved to vessels table
 
 ```{r}
 ships_dt <- ships_dt[, -vessel_vars, with = FALSE]
@@ -220,6 +221,15 @@ Although they are treated by the shiny server function, we remove them proactive
 ```{r}
 vessels_dt <- vessels_dt[!is.na(LAT) | is.na(LON)]
 ```
+
+### Sanitising port labels
+
+Converting firt letter to uppercase for portnames.
+
+```{r}
+vessels_dt[, port := str_to_title(port)]
+```
+
 
 ### Timeseries data
 
